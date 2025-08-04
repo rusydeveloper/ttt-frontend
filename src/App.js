@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:3001');
+const socket = io('https://ttt-backend-aged-fire-8741.fly.dev');
 
 function App() {
   const [player, setPlayer] = useState(null);
