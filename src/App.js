@@ -8,6 +8,7 @@ function App() {
   const [turn, setTurn] = useState('X');
   const [winner, setWinner] = useState(null);
   const [opponent, setOpponent] = useState(null);
+  const [waitingRematch, setWaitingRematch] = useState(false);
 
 
   const [name, setName] = useState('');
@@ -25,6 +26,7 @@ function App() {
       setBoard(board);
       setTurn(currentTurn);
       setWinner(null);
+      setWaitingRematch(false);
     });
 
     socket.on('gameOver', ({ board, winner }) => {
@@ -56,10 +58,6 @@ function App() {
     if (!board[index] && player === turn && !winner) {
       socket.emit('makeMove', index);
     }
-  };
-
-  const handleReset = () => {
-    window.location.reload(); // keep it simple for now
   };
 
   return (
@@ -118,8 +116,17 @@ function App() {
             ))}
           </div>
 
-          {winner && (
-            <button onClick={handleReset}>Play Again</button>
+          {winner && !waitingRematch && (
+            <button onClick={() => {
+              socket.emit('requestRematch');
+              setWaitingRematch(true);
+            }}>
+              Play Again
+            </button>
+          )}
+
+          {winner && waitingRematch && (
+            <p>Waiting for opponent to confirm...</p>
           )}
         </>
       )}
