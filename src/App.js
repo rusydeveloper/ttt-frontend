@@ -2,19 +2,24 @@ import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 
 const socket = io('https://ttt-backend-aged-fire-8741.fly.dev'); // 🔁 Update to your deployed backend
-
 function App() {
   const [player, setPlayer] = useState(null);
   const [board, setBoard] = useState(Array(9).fill(null));
   const [turn, setTurn] = useState('X');
   const [winner, setWinner] = useState(null);
+  const [opponent, setOpponent] = useState(null);
+
 
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState('🐱');
   const avatarOptions = ['🐱', '🐶', '🐵', '🐸', '🐼', '🦊'];
 
   useEffect(() => {
-    socket.on('playerAssignment', (symbol) => setPlayer(symbol));
+    socket.on('playerAssignment', (symbol) => {
+      setPlayer(symbol);
+      if (!name || !avatar) return;
+      socket.emit('registerPlayer', { name, avatar });
+    });
 
     socket.on('gameState', ({ board, currentTurn }) => {
       setBoard(board);
@@ -27,6 +32,12 @@ function App() {
       setWinner(winner);
     });
 
+    socket.on('playerInfo', (data) => {
+      setOpponent(data.opponent);
+      setName(data.you.name); // confirm local state
+      setAvatar(data.you.avatar);
+    });
+
     socket.on('playerLeft', () => {
       alert('Opponent left the game. Reloading...');
       window.location.reload();
@@ -37,8 +48,9 @@ function App() {
       socket.off('gameState');
       socket.off('gameOver');
       socket.off('playerLeft');
+      socket.off('playerInfo');
     };
-  }, []);
+  }, [name, avatar]);
 
   const handleClick = (index) => {
     if (!board[index] && player === turn && !winner) {
@@ -76,6 +88,9 @@ function App() {
               ? (winner === 'draw' ? 'Draw!' : `Player ${winner} wins!`)
               : (turn === player ? 'Your turn' : 'Opponent’s turn')}
           </h3>
+          {opponent && (
+            <h3>👤 Opponent: {opponent.avatar} {opponent.name || 'Waiting...'}</h3>
+          )}
 
           <div style={{
             display: 'grid',
