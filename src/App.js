@@ -9,6 +9,7 @@ function App() {
   const [winner, setWinner] = useState(null);
   const [opponent, setOpponent] = useState(null);
   const [waitingRematch, setWaitingRematch] = useState(false);
+  const [countdown, setCountdown] = useState(null);
 
 
   const [name, setName] = useState('');
@@ -33,6 +34,7 @@ function App() {
       setTurn(currentTurn);
       setWinner(null);
       setWaitingRematch(false);
+      setCountdown(null);
     });
 
 
@@ -63,12 +65,17 @@ function App() {
       window.location.reload();
     });
 
+    socket.on('rematchStartingIn', ({ seconds }) => {
+      setCountdown(seconds);
+    });
+
     return () => {
       socket.off('playerAssignment');
       socket.off('gameState');
       socket.off('gameOver');
       socket.off('playerLeft');
       socket.off('playerInfo');
+      socket.off('rematchStartingIn');
     };
   }, [name, avatar]);
 
@@ -144,7 +151,9 @@ function App() {
               </div>
             ))}
           </div>
-
+          {countdown !== null && (
+            <h3>⏳ New game starting in: {countdown}</h3>
+          )}
 
           {winner && !waitingRematch && (
             <button onClick={() => {
