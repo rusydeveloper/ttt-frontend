@@ -15,6 +15,12 @@ function App() {
   const [avatar, setAvatar] = useState('🐱');
   const avatarOptions = ['🐱', '🐶', '🐵', '🐸', '🐼', '🦊'];
 
+  const [score, setScore] = useState({
+    wins: 0,
+    losses: 0,
+    draws: 0
+  });
+
   useEffect(() => {
     socket.on('playerAssignment', (symbol) => {
       setPlayer(symbol);
@@ -29,9 +35,21 @@ function App() {
       setWaitingRematch(false);
     });
 
+
+
     socket.on('gameOver', ({ board, winner }) => {
       setBoard(board);
       setWinner(winner);
+
+      setScore(prev => {
+        if (winner === 'draw') {
+          return { ...prev, draws: prev.draws + 1 };
+        } else if (winner === player) {
+          return { ...prev, wins: prev.wins + 1 };
+        } else {
+          return { ...prev, losses: prev.losses + 1 };
+        }
+      });
     });
 
     socket.on('playerInfo', (data) => {
@@ -89,6 +107,17 @@ function App() {
           {opponent && (
             <h3>👤 Opponent: {opponent.avatar} {opponent.name || 'Waiting...'}</h3>
           )}
+          <div style={{
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            padding: '10px',
+            maxWidth: '150px'
+          }}>
+            <h4>🧮 Score</h4>
+            <p>✅ Wins: {score.wins}</p>
+            <p>❌ Losses: {score.losses}</p>
+            <p>⚖️ Draws: {score.draws}</p>
+          </div>
 
           <div style={{
             display: 'grid',
@@ -115,6 +144,7 @@ function App() {
               </div>
             ))}
           </div>
+
 
           {winner && !waitingRematch && (
             <button onClick={() => {
